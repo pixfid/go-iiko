@@ -32,6 +32,70 @@ import (
 // Orders Заказы Доставки
 type Orders service
 
+func (s *Orders) Info(ctx context.Context, accessToken, organizationId, orderId string) (*interface{}, error) {
+	u := fmt.Sprintf("orders/info?access_token=%s&organization=%s&order=%s", accessToken, organizationId, orderId)
+	req, err := s.client.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	//cityWithStreets := new(CityWithStreets)
+	t, err := s.client.Do(ctx, req, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	println(string(t))
+	return nil, nil
+}
+
+type CheckAddressParams struct {
+	City   string `json:"city,omitempty"`
+	Street string `json:"street,omitempty"`
+	Home   string `json:"home,omitempty"`
+}
+
+type CheckAddressResponse struct {
+	AddressInZone *bool `json:"addressInZone,omitempty"`
+}
+
+// СheckAddress Проверить осуществимость доставки по указанному адресу
+// Определяет, возможно ли осуществить доставку по указанному адресу.
+func (s *Orders) СheckAddress(ctx context.Context, accessToken, requestTimeout, organizationId string, params CheckAddressParams) (*CheckAddressResponse, error) {
+	u := fmt.Sprintf("orders/checkAddress?access_token=%s&request_timeout=%s&organizationId=%s", accessToken, requestTimeout, organizationId)
+	req, err := s.client.NewRequest("POST", u, params)
+	if err != nil {
+		return nil, err
+	}
+
+	checkAddressResponse := new(CheckAddressResponse)
+	_, err = s.client.Do(ctx, req, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return checkAddressResponse, nil
+}
+
+//TODO
+func (s *Orders) DeliveryOrders(ctx context.Context, accessToken, organizationId, dateFrom, dateTo, deliveryStatus, deliveryTerminalId, requestTimeout string) (*interface{}, error) {
+	u := fmt.Sprintf("orders/deliveryOrders?access_token=%s&organization=%s&dateFrom=%s&dateTo=%s&deliveryStatus=%s&deliveryTerminalId=%s&request_timeout=%s",
+		accessToken, organizationId, dateFrom, dateTo, deliveryStatus, deliveryTerminalId, requestTimeout)
+	req, err := s.client.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	//cityWithStreets := new(CityWithStreets)
+	t, err := s.client.Do(ctx, req, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	println(string(t))
+	return nil, nil
+}
+
 // DeliveryHistoryByPhone История доставочных заказов по номеру телефона
 // Получение информации о доставочных заказах, которые сделаны с заданного телефона в заданном ресторане.
 // Метод работает только для ресторанов с колл-центром (iikoCallCenter)
