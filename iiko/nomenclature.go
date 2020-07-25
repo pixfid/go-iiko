@@ -24,4 +24,27 @@
 
 package iiko
 
+import (
+	"context"
+	"fmt"
+)
+
+// Nomenclature Номенклатура
 type Nomenclature service
+
+// Nomenclature Получить дерево номенклатуры
+func (s *Nomenclature) Nomenclature(ctx context.Context, accessToken, organizationId string) (*NomenclatureResponse, error) {
+	u := fmt.Sprintf("nomenclature/%s?access_token=%s", organizationId, accessToken)
+	req, err := s.client.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	nomenclatureResponse := new(NomenclatureResponse)
+	_, err = s.client.Do(ctx, req, &nomenclatureResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return nomenclatureResponse, nil
+}
