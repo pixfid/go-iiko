@@ -25,6 +25,7 @@
 package iiko
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -84,7 +85,13 @@ func (c *Client) NewRequest(method string, urlStr string, body interface{}) (*ht
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest(method, u.String(), nil)
+
+	postData, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(method, u.String(), bytes.NewBuffer(postData))
 	if err != nil {
 		return nil, err
 	}
