@@ -61,7 +61,7 @@ type CheckAddressResponse struct {
 
 // СheckAddress Проверить осуществимость доставки по указанному адресу
 // Определяет, возможно ли осуществить доставку по указанному адресу.
-func (s *Orders) СheckAddress(ctx context.Context, accessToken, requestTimeout, organizationId string, params CheckAddressParams) (*CheckAddressResponse, error) {
+func (s *Orders) CheckAddress(ctx context.Context, accessToken, requestTimeout, organizationId string, params CheckAddressParams) (*CheckAddressResponse, error) {
 	u := fmt.Sprintf("orders/checkAddress?access_token=%s&request_timeout=%s&organizationId=%s", accessToken, requestTimeout, organizationId)
 	req, err := s.client.NewRequest("POST", u, params)
 	if err != nil {
@@ -77,7 +77,28 @@ func (s *Orders) СheckAddress(ctx context.Context, accessToken, requestTimeout,
 	return checkAddressResponse, nil
 }
 
-//TODO
+// Список доставок в указанном интервале времени
+//
+//accessToken			: string  		Маркер доступа.
+//
+//organization    		: string  		Идентификатор ресторана.
+//
+//dateFrom       	 	: string  		Дата начала интервала (включительно).
+//
+//dateTo				: string  		Дата окончания интервала (включительно).
+//
+//deliveryStatus  	: string  		Статус доставки (регистронезависимый).
+//	Должно принимать одно из следующих значений:
+//		● NEW
+//		● WAITING
+//		● ON_WAY
+//		● CLOSED
+//		● CANCELLED
+//		● DELIVERED
+//		● UNCONFIRMED
+//deliveryTerminalId 	: string   		Идентификатор терминала доставки.
+//
+//requestTimeout      : string 		Таймаут для выполнения запроса.
 func (s *Orders) DeliveryOrders(ctx context.Context, accessToken, organizationId, dateFrom, dateTo, deliveryStatus, deliveryTerminalId, requestTimeout string) (*interface{}, error) {
 	u := fmt.Sprintf("orders/deliveryOrders?access_token=%s&organization=%s&dateFrom=%s&dateTo=%s&deliveryStatus=%s&deliveryTerminalId=%s&request_timeout=%s",
 		accessToken, organizationId, dateFrom, dateTo, deliveryStatus, deliveryTerminalId, requestTimeout)
@@ -115,20 +136,31 @@ func (s *Orders) DeliveryHistoryByPhone(ctx context.Context, accessToken, organi
 	return customersDeliveryHistoryResponse, nil
 }
 
-// GetCourierOrders Получить все заказы курьера
-func (s *Orders) GetCourierOrders(ctx context.Context, accessToken, organizationId, courierId, requestTimeout string) (*interface{}, error) {
+// GetCourierOrders Получить все заказы курьера,
+//
+// organizationId        : string        Идентификатор организации
+//
+// courierId             : string        Идентификатор курьера
+//
+//
+// accessToken			 : string  		Маркер доступа.
+//
+// requestTimeout в виде : string        Таймаут для выполнения запроса.
+//
+// Пример requestTimeout: 00%3A02%3A00
+func (s *Orders) GetCourierOrders(ctx context.Context, accessToken, organizationId, courierId, requestTimeout string) (*DeliveryOrdersResponse, error) {
+
 	u := fmt.Sprintf("orders/get_courier_orders?access_token=%s&organization=%s&courier=%s&request_timeout=%s", accessToken, organizationId, courierId, requestTimeout)
 	req, err := s.client.NewRequest("GET", u, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	//cityWithStreets := new(CityWithStreets)
-	t, err := s.client.Do(ctx, req, nil)
+	deliveryOrdersResponse := new(DeliveryOrdersResponse)
+	_, err = s.client.Do(ctx, req, &deliveryOrdersResponse)
 	if err != nil {
 		return nil, err
 	}
 
-	println(string(t))
-	return nil, nil
+	return deliveryOrdersResponse, nil
 }
