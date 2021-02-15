@@ -91,17 +91,6 @@ type PaymentTypesResponse struct {
 	PaymentTypes []PaymentType `json:"paymentTypes"`
 }
 
-type PaymentType struct {
-	ID                           *string     `json:"id,omitempty"`
-	Code                         *string     `json:"code,omitempty"`
-	Name                         *string     `json:"name,omitempty"`
-	Comment                      *string     `json:"comment,omitempty"`
-	Combinable                   *bool       `json:"combinable,omitempty"`
-	ExternalRevision             *int64      `json:"externalRevision,omitempty"`
-	ApplicableMarketingCampaigns interface{} `json:"applicableMarketingCampaigns"`
-	Deleted                      *bool       `json:"deleted,omitempty"`
-}
-
 // GetPaymentTypes Получить список типов оплат
 // Запрос возвращает список внешних типов оплат для заданного ресторана.
 // Внешними считаются типы, процессинг которых идет не на стороне iiko.
