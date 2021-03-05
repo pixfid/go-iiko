@@ -77,6 +77,11 @@ func (s *RmsSettings) GetCouriers(ctx context.Context, accessToken, organization
 		return nil, err
 	}
 
+	parseFormErr := req.ParseForm()
+	if parseFormErr != nil {
+		fmt.Println(parseFormErr)
+	}
+
 	organizationUserResponse := new(OrganizationUserResponse)
 	_, err = s.client.Do(ctx, req, &organizationUserResponse)
 	if err != nil {

@@ -25,7 +25,9 @@
 package iiko
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 )
 
@@ -63,7 +65,13 @@ type CheckAddressResponse struct {
 // Определяет, возможно ли осуществить доставку по указанному адресу.
 func (s *Orders) CheckAddress(ctx context.Context, accessToken, requestTimeout, organizationId string, params CheckAddressParams) (*CheckAddressResponse, error) {
 	u := fmt.Sprintf("orders/checkAddress?access_token=%s&request_timeout=%s&organizationId=%s", accessToken, requestTimeout, organizationId)
-	req, err := s.client.NewRequest("POST", u, params)
+
+	postData, err := json.Marshal(params)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := s.client.NewRequest("POST", u, bytes.NewBuffer(postData))
 	if err != nil {
 		return nil, err
 	}

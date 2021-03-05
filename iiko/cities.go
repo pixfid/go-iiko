@@ -27,6 +27,7 @@ package iiko
 import (
 	"context"
 	"fmt"
+	"net/http"
 )
 
 // CitiesService Города, улицы, регионы
@@ -54,7 +55,7 @@ type City struct {
 // Эти данные могут быть использовать для задания адреса доставки.
 func (s *CitiesService) Cities(ctx context.Context, accessToken, organizationId string) (*CityWithStreets, error) {
 	u := fmt.Sprintf("cities/cities?access_token=%s&organization=%s", accessToken, organizationId)
-	req, err := s.client.NewRequest("GET", u, nil)
+	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +76,7 @@ type Cities []City
 // Эти данные могут быть использовать для задания адреса доставки.
 func (s *CitiesService) CitiesList(ctx context.Context, accessToken, organizationId string) (*Cities, error) {
 	u := fmt.Sprintf("cities/citiesList?access_token=%s&organization=%s", accessToken, organizationId)
-	req, err := s.client.NewRequest("GET", u, nil)
+	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +97,7 @@ type Streets []City
 // Эти данные могут быть использовать для задания адреса доставки.
 func (s *CitiesService) Streets(ctx context.Context, accessToken, organizationId, cityId string) (*Streets, error) {
 	u := fmt.Sprintf("streets/streets?access_token=%s&organization=%s&city=%s", accessToken, organizationId, cityId)
-	req, err := s.client.NewRequest("GET", u, nil)
+	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +119,7 @@ type RegionsList struct {
 // Эти данные могут быть использовать для задания региона в адресе доставки.
 func (s *CitiesService) Regions(ctx context.Context, accessToken, organizationId string) (*RegionsList, error) {
 	u := fmt.Sprintf("regions/regions?access_token=%s&organization=%s", accessToken, organizationId)
-	req, err := s.client.NewRequest("GET", u, nil)
+	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return nil, err
 	}

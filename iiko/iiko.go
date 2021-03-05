@@ -30,11 +30,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 const (
@@ -60,9 +60,23 @@ type service struct {
 	client *Client
 }
 
+type ErrorOut struct {
+	Error Error
+}
+
+type Error struct {
+	Code     int
+	Body     string
+	Endpoint string
+}
+
+func (e Error) Error() string {
+	return fmt.Sprintf(`Status Code: %d`, e.Code)
+}
+
 func NewClient(httpClient *http.Client) *Client {
 	if httpClient == nil {
-		httpClient = &http.Client{}
+		httpClient = &http.Client{Timeout: 10 * time.Second}
 	}
 	baseURL, _ := url.Parse(defaultBaseURL)
 
@@ -101,53 +115,52 @@ func (c *Client) NewRequest(method string, urlStr string, body interface{}) (*ht
 	}
 
 	req.Header.Set("Accept", "application/json")
-	if c.UserAgent != "" {
+	if c.UserAgent == "" {
 		req.Header.Set("User-Agent", c.UserAgent)
 	}
 	return req, nil
 }
 
-func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) ([]byte, error) {
+func (c *Client) Do(ctx context.Context, req *http.Request, target interface{}) ([]byte, error) {
 	if ctx == nil {
 		return nil, errors.New("context must be non-nil")
 	}
 	req = withContext(ctx, req)
 
-	response, err := c.client.Do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
-		// If we got an error, and the context has been canceled,
-		// the context's error is probably more useful.
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-		}
-
 		return nil, err
 	}
+	defer resp.Body.Close()
 
-	defer response.Body.Close()
-
-	if v != nil {
-		if w, ok := v.(io.Writer); ok {
-			_, _ = io.Copy(w, response.Body)
-		} else {
-			decErr := json.NewDecoder(response.Body).Decode(v)
-			if decErr == io.EOF {
-				decErr = nil
-			}
-			if decErr != nil {
-				err = decErr
-			}
-		}
-	}
-
-	body, err := ioutil.ReadAll(response.Body)
+	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	return body, err
+	if resp.StatusCode == 200 || resp.StatusCode == 201 {
+
+		if isPlainTextResponse(b) {
+			return b, err
+		}
+
+		err = json.Unmarshal(b, target)
+		if err != nil {
+			return nil, err
+		}
+		return b, nil
+	}
+
+	err = Error{
+		Code:     resp.StatusCode,
+		Body:     string(b),
+		Endpoint: req.URL.String(),
+	}
+	return nil, err
+}
+
+func isPlainTextResponse(b []byte) bool {
+	return bytes.HasPrefix(b, []byte(`"`))
 }
 
 func withContext(ctx context.Context, req *http.Request) *http.Request {
