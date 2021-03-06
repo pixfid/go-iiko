@@ -92,6 +92,9 @@ func NewClient(httpClient *http.Client) *Client {
 }
 
 func (c *Client) NewRequest(method string, urlStr string, body interface{}) (*http.Request, error) {
+
+	var req *http.Request
+
 	if !strings.HasSuffix(c.BaseURL.Path, "/") {
 		return nil, fmt.Errorf("BaseURL must have a trailing slash, but %q does not", c.BaseURL)
 	}
@@ -100,14 +103,23 @@ func (c *Client) NewRequest(method string, urlStr string, body interface{}) (*ht
 		return nil, err
 	}
 
-	postData, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
+	switch method {
+	case "GET":
+		req, err = http.NewRequest(method, u.String(), nil)
+		if err != nil {
+			return nil, err
+		}
+	case "POST":
+		postData, err := json.Marshal(body)
+		if err != nil {
+			return nil, err
+		}
+		req, err = http.NewRequest(method, u.String(), bytes.NewBuffer(postData))
+		if err != nil {
+			return nil, err
+		}
+	default:
 
-	req, err := http.NewRequest(method, u.String(), bytes.NewBuffer(postData))
-	if err != nil {
-		return nil, err
 	}
 
 	if body != nil {
@@ -131,6 +143,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, target interface{}) 
 	if err != nil {
 		return nil, err
 	}
+
 	defer resp.Body.Close()
 
 	b, err := ioutil.ReadAll(resp.Body)
